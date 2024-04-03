@@ -26,6 +26,8 @@ SAMPLES = FASTQ_DICT.keys()
 GENOME = config["GENOME"]
 
 GTF_DICT = {"hg38":"/storage/zhangyanxiaoLab/xiongxiong/Reference/Annotation/hg38.gencode.annotation.gtf",
+            "hg38_with_dm6":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/hg38_dm6in.gtf",
+            #"hg38_with_dm6":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/hg38_dm6in1.gtf",
             "mm10":"/storage/zhangyanxiaoLab/xiongxiong/Reference/Annotation/mm10.gencode.annotation.gtf",
             "mm10_GFP":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/mm10_gfp_AAVCre.gtf",
             "dm6":"/storage/zhangyanxiaoLab/xiongxiong/Reference/Annotation/dm6.gencode.annotation.gtf",
@@ -33,6 +35,8 @@ GTF_DICT = {"hg38":"/storage/zhangyanxiaoLab/xiongxiong/Reference/Annotation/hg3
             "Zokor3":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/EBaileyi.gtf"
             }
 STAR_DICT = {"hg38":"/storage/zhangyanxiaoLab/share/STAR_index/hg38",
+            "hg38_with_dm6":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/hg38_with_dm6",
+            #"hg38_with_dm6":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/hg38_with_dm6in1",
             "dm6":"/storage/zhangyanxiaoLab/share/STAR_index/dm6",
             "mm10":"/storage/zhangyanxiaoLab/share/STAR_index/mm10",
             "mm10_GFP":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/mm10_gfp_AAVCre",
@@ -40,6 +44,7 @@ STAR_DICT = {"hg38":"/storage/zhangyanxiaoLab/share/STAR_index/hg38",
             "Zokor3":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/EBaileyi"
             }
 TE_GTFDICT = {"hg38":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/hg38_rmsk_TE.gtf",
+            "hg38_with_dm6":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/hg38_rmsk_TE.gtf",
             "dm6":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/dm6_rmsk.gtf",
             "mm10":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/mm10_rmsk_TE.gtf",
             "mm10_GFP":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/mm10_rmsk_TE.gtf",

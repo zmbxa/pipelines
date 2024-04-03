@@ -26,6 +26,7 @@ SAMPLES = FASTQ_DICT.keys()
 GENOME = config["GENOME"]
 
 GTF_DICT = {"hg38":"/storage/zhangyanxiaoLab/xiongxiong/Reference/Annotation/hg38.gencode.annotation.gtf",
+            "hg38_with_dm6":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/hg38_dm6in1.gtf",
             "mm10":"/storage/zhangyanxiaoLab/xiongxiong/Reference/Annotation/mm10.gencode.annotation.gtf",
             "mm10_GFP":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/mm10_gfp_AAVCre.gtf",
             "dm6":"/storage/zhangyanxiaoLab/xiongxiong/Reference/Annotation/dm6.gencode.annotation.gtf",
@@ -33,6 +34,7 @@ GTF_DICT = {"hg38":"/storage/zhangyanxiaoLab/xiongxiong/Reference/Annotation/hg3
             "Zokor3":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/EBaileyi.gtf"
             }
 STAR_DICT = {"hg38":"/storage/zhangyanxiaoLab/share/STAR_index/hg38",
+            "hg38_with_dm6":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/hg38_with_dm6",
             "dm6":"/storage/zhangyanxiaoLab/share/STAR_index/dm6",
             "mm10":"/storage/zhangyanxiaoLab/share/STAR_index/mm10",
             "mm10_GFP":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/mm10_gfp_AAVCre",
@@ -47,8 +49,7 @@ rule all:
     input:
         "rna/bulk_rna_counts.txt",
         expand("rna/{sample}/{sample}.Log.final.out",sample=SAMPLES),
-        expand("rna/{sample}/{sample}.nodup.srt.bam",sample=SAMPLES),
-        expand("qc/{sample}/{sample}.dup.qc",sample=SAMPLES),
+        expand("rna/{sample}/{sample}.Aligned.sortedByCoord.out.bam",sample=SAMPLES),
         "all_sample.qc.txt",
         #"te/te_counts.txt",
 
@@ -70,10 +71,10 @@ rule star_align:
         r1_clean="fastq/{sample}/{sample}_R1.clean.fastq.gz",
         r2_clean="fastq/{sample}/{sample}_R2.clean.fastq.gz"
     output:
-        bam=temp("rna/{sample}/{sample}.Aligned.sortedByCoord.out.bam"),
+        bam="rna/{sample}/{sample}.Aligned.sortedByCoord.out.bam",
         raw_qc="rna/{sample}/{sample}.raw.flagstat.qc",
         star_out = "rna/{sample}/{sample}.Log.final.out",
-        temp=temp("rna/{sample}/{sample}.Aligned.toTranscriptome.out.bam")
+        temp="rna/{sample}/{sample}.Aligned.toTranscriptome.out.bam"
     params:
         star_index=STAR_IND
     shell:
