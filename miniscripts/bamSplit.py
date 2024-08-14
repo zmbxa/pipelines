@@ -13,6 +13,8 @@ if not args.bam_file:
   print("BAM file is required!")
   parser.print_usage()
   exit(1)
+
+key_bam=args.bam_file[0]
   
 if not args.barcode_files:
   print("Barcodes file is required!")
@@ -36,9 +38,9 @@ for file in args.barcode_files:
   print(type)
   tmp_sam="tmp.sam"
   
-  os.system(f"sambamba view -t {args.thread} {args.bam_file} -H > {tmp_sam}")
-  os.system(f"sambamba view -t {args.thread} {args.bam_file} | LC_ALL=C grep -F -f {file} >> {tmp_sam}")
-  os.system(f"sambamba view -t {args.thread} -S {tmp_sam} -f bam -o {args.output_dir}/{type}.bam")
+  os.system(f"/storage/zhangyanxiaoLab/niuyuxiao/tools/sambamba/sambamba  view -t {args.thread} {key_bam} -H > {tmp_sam}")
+  os.system(f"/storage/zhangyanxiaoLab/niuyuxiao/tools/sambamba/sambamba  view -t {args.thread} {key_bam} | LC_ALL=C grep -F -f {file} >> {tmp_sam}")
+  os.system(f"/storage/zhangyanxiaoLab/niuyuxiao/tools/sambamba/sambamba  view -t {args.thread} -S {tmp_sam} -f bam -o {args.output_dir}/{type}.bam")
   
   if os.path.isfile(f"{args.output_dir}/{type}.bam"):
     print(f"Splited {args.bam_file} to {args.output_dir}/{type}.bam for: {file}")

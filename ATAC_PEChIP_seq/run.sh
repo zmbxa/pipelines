@@ -4,7 +4,7 @@
 usage() {
   echo "Usage: bash $0 -g <genome> -c <cores_for_snakemake>"
   echo "Options:"
-  echo "  -g,   Genome name in mm10, mm10_GFP, dm6, hg38, lambda"
+  echo "  -g,   Genome name in mm10, mm10_GFP, dm6, hg38,ce11,and lambda"
   echo "  -c,   Core numbers for snakemake, default is 4"
   echo "  -s,   Spike-in genome (optional)"
   exit 1
@@ -43,18 +43,19 @@ if [ -z "$SPIKE" ]; then
   exit 1
   fi
 else
- snakemake --cores $N_CORE -s /storage/zhangyanxiaoLab/niuyuxiao/pipelines/ATAC_PEChIP_seq/ATACseq_PEChIP_withSpikeIn.smk --config GENOME=$GENOME spikeGENOME=$SPIKE --use-conda --conda-frontend conda --dryrun
+ snakemake --cores $N_CORE -s /storage/zhangyanxiaoLab/niuyuxiao/pipelines/ATAC_PEChIP_seq/ATACseq_PEChIP_unmap2SpikeIn.smk --config GENOME=$GENOME spikeGENOME=$SPIKE --use-conda --conda-frontend conda --dryrun
  if [ $? -eq 0 ]; then
-    snakemake --cores $N_CORE -s /storage/zhangyanxiaoLab/niuyuxiao/pipelines/ATAC_PEChIP_seq/ATACseq_PEChIP_withSpikeIn.smk --config GENOME=$GENOME spikeGENOME=$SPIKE --use-conda --conda-frontend conda 
+    snakemake --cores $N_CORE -s /storage/zhangyanxiaoLab/niuyuxiao/pipelines/ATAC_PEChIP_seq/ATACseq_PEChIP_unmap2SpikeIn.smk --config GENOME=$GENOME spikeGENOME=$SPIKE --use-conda --conda-frontend conda 
   else
     echo "Please Check inputs or see runing log..."
   exit 1
+  fi
 fi
 
 
 if [ $? -eq 0 ]; then
- python /storage/zhangyanxiaoLab/niuyuxiao/pipelines/reminder.py "Your bulk ATAC/PE-ChIP mapping are successfully done! Congrats~" "Need a cup of Latte?"
+ python /storage/zhangyanxiaoLab/niuyuxiao/pipelines/reminder_westlake.py "Your bulk ATAC/PE-ChIP mapping are successfully done! Congrats~" "Need a cup of Latte?"
 else
- echo "Please Check inputs or see runing log..."
+ echo "Please Check mail setting..."
  exit 1
 fi

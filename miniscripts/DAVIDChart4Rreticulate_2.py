@@ -11,7 +11,7 @@ def david_gene_enrichment(email='niuyuxiao@westlake.edu.cn', IDType='ENSEMBL_GEN
 
     url = 'https://david.ncifcrf.gov/webservice/services/DAVIDWebService?wsdl'
 
-    client = Client(url,timeout=600)
+    client = Client(url)
     client.wsdl.services[0].setlocation('https://david.ncifcrf.gov/webservice/services/DAVIDWebService.DAVIDWebServiceHttpSoap11Endpoint/')
 
     # Authenticate user email
@@ -39,13 +39,31 @@ def david_gene_enrichment(email='niuyuxiao@westlake.edu.cn', IDType='ENSEMBL_GEN
     chartRow = len(chartReport)
     print('Total chart records:', chartRow)
     
-    chartDict = []
-
+    Chart_df = pd.DataFrame()
     for record in chartReport:
-        record_dict = dict(record)
-        del record_dict['scores']
-        chartDict.append(record_dict)
-       
-    chart_df = pd.DataFrame(chartDict)
-    return chart_df
+      print(record.termName)
+      Chart_df=pd.concat([Chart_df,pd.DataFrame(record).T[1:]])
+    
+    Chart_df.columns = list(pd.DataFrame(record)[0])
+    
+    return Chart_df
 
+    # with open(output, 'w') as fOut:
+    #     fOut.write('Category\tTerm\tCount\t%\tPvalue\tGenes\tList Total\tPop Hits\tPop Total\tFold Enrichment\tBonferroni\tBenjamini\tFDR\n')
+    #     for simpleChartRecord in chartReport:
+    #         categoryName = simpleChartRecord.categoryName
+    #         termName = simpleChartRecord.termName
+    #         listHits = simpleChartRecord.listHits
+    #         percent = simpleChartRecord.percent
+    #         ease = simpleChartRecord.ease
+    #         genes = simpleChartRecord.geneIds
+    #         listTotals = simpleChartRecord.listTotals
+    #         popHits = simpleChartRecord.popHits
+    #         popTotals = simpleChartRecord.popTotals
+    #         foldEnrichment = simpleChartRecord.foldEnrichment
+    #         bonferroni = simpleChartRecord.bonferroni
+    #         benjamini = simpleChartRecord.benjamini
+    #         FDR = simpleChartRecord.afdr
+    #         rowList = [categoryName, termName, str(listHits), str(percent), str(ease), genes, str(listTotals), str(popHits), str(popTotals), str(foldEnrichment), str(bonferroni), str(benjamini), str(FDR)]
+    #         fOut.write('\t'.join(rowList) + '\n')
+    #     print('Write file:', output, 'finished!')

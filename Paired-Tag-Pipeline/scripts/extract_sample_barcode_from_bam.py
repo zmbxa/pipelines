@@ -1,4 +1,6 @@
 #!/bin/python
+# example usage
+# python scripts/extract_sample_barcode_from_bam.py --bam [bam] --statH sample_barcode.txt -o [output-prefix] -p [N_CPUS]
 
 # sample_barcode.txt
 '''
@@ -18,7 +20,7 @@ barcode sample
 '''
 
 import argparse
-import pandas as pd
+
 from multiprocessing import Pool
 
 parser = argparse.ArgumentParser(description='filter bam based on QNAMES')
@@ -47,30 +49,36 @@ def run():
   print('Used (secs): ', end_time - start_time)
 
 def generate_bams(bamf, statHf, prefix):
-  o_stat_H = pd.read_csv(statHf, sep='\t')
+  o_stat_H = np.genfromtxt(statHf, dtype=[('barcode',"|S10"),('sample',"|S10")],encoding=None, names=True)
+  #o_stat_H = np.genfromtxt(statHf, dtype = ("|S10","|S10"),encoding=None, names=True)
+ 
+  print(o_stat_H)
   print(np.unique(o_stat_H['sample']))
   p = Pool(NCPU)
   for idx in np.unique(o_stat_H['sample']):
+        print(idx)
         p.apply_async(generate_bam_worker, (bamf, o_stat_H, idx, prefix))
   p.close()
   p.join()
 
 def generate_bam_worker(bamf, o_stat_H, sample, prefix):
-  print(f"hello {sample}")
+  print("hello " +sample.astype(str))
   name = bamf 
+  print(name)
   bamF = pysam.AlignmentFile(name)
-  qnames = list(o_stat_H[o_stat_H['sample']==sample]['barcode'].astype(str))
-  nbarcode = len(qnames[0].split(':'))
+  qnames = list(o_stat_H[np.where( (o_stat_H['sample']==sample) )]['barcode'].astype(str)  )
   qnames_set = set(qnames)
-  bam_fname = prefix + "." + sample + ".bam"
-  print("For metaCell =", sample, "The filtered bam is writing to:", bam_fname)
+  print(qnames_set)
+  bam_fname = prefix + "." + "metacell_" + sample.astype(str) + ".bam"
+  print("For metaCell =", sample.astype(str), "The filtered bam is writing to:", bam_fname)
   obam = pysam.AlignmentFile(bam_fname, "wb", template=bamF)
   for b in bamF.fetch(until_eof=True):
-    if ':'.join(b.query_name.split(':')[-1-nbarcode:-1]) in qnames_set:
-        obam.write(b)
+  #  print(b.query_name.split(':'))
+    if b.query_name.split(':')[-2] in qnames_set:
+      obam.write(b)
   obam.close()
   bamF.close()
-  print("metaCell =", sample," witting finished.")
+  print("metaCell =", sample," writing finished.")
 
 
 

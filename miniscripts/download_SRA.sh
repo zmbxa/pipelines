@@ -37,7 +37,7 @@ else
   echo continue aria2 download
 fi
 
- aria2c -c -x 6 -s 6 -j 4 -d sra/ -i aria2_download.txt    
+ /storage/zhangyanxiaoLab/niuyuxiao/anaconda3/bin/aria2c -c -x 6 -s 6 -j 4 -d sra/ -i aria2_download.txt    
 
  mkdir -p fastq/
  fasterq-dump -3 -e 4 -p -O fastq/ sra/*

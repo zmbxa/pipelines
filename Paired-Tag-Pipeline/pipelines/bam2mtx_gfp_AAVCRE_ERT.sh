@@ -67,11 +67,11 @@ else
 	sort --parallel ${nthread} -k1,1 -k2,2n tmp.UsefulReads.bed > tmp.UsefulReads.Sorted.bed
 	case ${library} in
 		"DNA")
-			awk '{print $1, $2, $3, $1"-"$2"-"$3, "bin"NR}' OFS='\t' /storage/zhangyanxiaoLab/niuyuxiao/annotations/refBed/mm10GFP_bin_genome/mm10_gfpAAVCre_bin_5k.bed  | bedtools intersect -sorted -F 0.5 -wa -wb -a - -b tmp.UsefulReads.Sorted.bed | cut -f 4,5,9,10 > tmp.Count.txt
+			awk '{print $1, $2, $3, $1"-"$2"-"$3, "bin"NR}' OFS='\t' /storage/zhangyanxiaoLab/niuyuxiao/annotations/refBed/mm10GFP_bin_genome/mm10_gfpAAVCreERT_bin_5k.bed  | bedtools intersect -sorted -F 0.5 -wa -wb -a - -b tmp.UsefulReads.Sorted.bed | cut -f 4,5,9,10 > tmp.Count.txt
 			sort --parallel ${nthread} tmp.Count.txt | bedtools groupby -i - -g 1,2,3 -c 4 -o count > ${prefix}_CountMatrix.txt
 			;;
 		"RNA")
-			featureCounts -T ${nthread} -a /storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/mm10_gfp_AAVCre.gtf -t gene -f -g gene_id --extraAttributes gene_name -M -o tmp.Counts ${input}
+			featureCounts -T ${nthread} -a /storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/mm10_gfp_AAVCRE_ERT.gtf -t gene -f -g gene_id --extraAttributes gene_name -M -o tmp.Counts ${input}
 			awk 'NR>2' tmp.Counts | awk '{gsub(/\.[0-9]*/, "", $1); print $2, $3-1, $4, $1, $8, $5, $7}' OFS='\t' | awk '$5>0' > tmp.ExpressedGenes.bed
 			sort --parallel ${nthread} -k1,1 -k2,2n tmp.ExpressedGenes.bed > ${prefix}_ExpressedGenes.bed
 			bedtools intersect -sorted -F 0.5 -wa -wb -a ${prefix}_ExpressedGenes.bed -b tmp.UsefulReads.Sorted.bed | awk '{print $4, $7, $11, substr($12,length($12)-9,10)}' OFS='\t' > tmp.Count.txt

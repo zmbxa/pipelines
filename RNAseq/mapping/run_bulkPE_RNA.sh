@@ -4,7 +4,7 @@
 usage() {
   echo "Usage: bash $0 -g <genome> -c <cores_for_snakemake> -noTE"
   echo "Options:"
-  echo "  -g,   Genome name in hg38, hg38_with_dm6, mm10, mm10_GFP, dm6 or Zokor3"
+  echo "  -g,   Genome name in hg38, hg38_with_dm6, mm10, mm10_GFP, mm10_with_dm6(in1), dm6 or Zokor3"
   echo "  -c,   Core numbers for snakemake, default is 4"
   echo "  -n, --noTE,   Do not mapping to TE reference"
   exit 1

@@ -117,6 +117,23 @@ rule reminder:
         python ~/pipelines/reminder.py "Your paired-tag pipeline are successfully done! Congrats~" "Need a cup of Latte?" > {output}
         '''
         
-        
+rule bam2mtx:
+  input:
+    "merge/filtered_bam/merged_DNA.bam",
+    "merge/filtered_bam/merged_RNA.bam"
+  output:
+    DNA="merge/DNA_matrix/matrix.mtx.gz",
+    RNA="merge/RNA_matrix/matrix.mtx.gz"
+  conda:
+    "paired_tag"
+  params:
+    bam2mtx=BAM2MTX
+  shell:
+    '''
+    cd merge
+    bash {params.bam2mtx} -n merged_DNA -g mm10 -i filtered_bam/merged_DNA.bam -l DNA -o ./DNA_matrix
+    bash {params.bam2mtx} -n merged_RNA -g mm10 -i filtered_bam/merged_RNA.bam -l RNA -o ./RNA_matrix
+    cd ..
+    '''        
 
 

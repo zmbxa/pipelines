@@ -1,8 +1,11 @@
 import subprocess
 # activating conda environment
-# conda_env = "/storage/zhangyanxiaoLab/niuyuxiao/anaconda3/envs/snapATAC2"
-# activate_cmd = f"source activate {conda_env}"
-# subprocess.call(activate_cmd, shell=True)
+conda_env = "/storage/zhangyanxiaoLab/niuyuxiao/anaconda3/envs/snapATAC2"
+#import os 
+#os.system("source /storage/zhangyanxiaoLab/niuyuxiao/anaconda3/etc/profile.d/conda.sh")
+#os.system('conda activate ' + conda_env)
+#activate_cmd = f"conda activate {conda_env}"
+#subprocess.run(activate_cmd, shell=True,executable='/bin/bash')
 
 import snapatac2 as snap
 import argparse
