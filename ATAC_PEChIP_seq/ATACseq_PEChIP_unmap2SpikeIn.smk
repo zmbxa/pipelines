@@ -174,7 +174,7 @@ rule last_qc:
   threads:1
   run:
     out = open(output[0],'w')
-    out.write("\t".join(["Sample","Total","Trim","Mapped","Filtered","Uniq","MappedToSpikeIn","ScaleFactor","Total_map%","Adapter%","Map%","Dup%","SpikeIn%"])+"\n")
+    out.write("\t".join(["Sample","Total","Trim","Mapped","Filtered","Uniq","MappedToSpikeIn","ScaleFactor","Total_map%","Adapter%","Map%","Dup%","SpikeIn%","SpikeIn_ratio"])+"\n")
     for idx in range(len(input.raw)):
       samples = re.match(r"qc\/(.*).raw.flagstat.qc",input.raw[idx]).groups()[0]
       raw_file = open(input.raw[idx], 'r')
@@ -212,8 +212,9 @@ rule last_qc:
       map_p = "%.4f"%(float(mapped)/float(trim))
       total_map_p = "%.4f"%((float(mapped)+float(mapped2spike))/float(trim))
       spikein_ratio = str(float(mapped2spike)/(float(mapped)+float(mapped2spike)))
+      spikeinPerc = str(100*float(mapped2spike)/(float(mapped)+float(mapped2spike)))
       dup_p = "%.2f"%(float(duplicates)/float(mapped))
-      out.write("\t".join([samples,total,trim,mapped,filt,nodup,mapped2spike,str(scaleFactor),total_map_p,adapter_p,map_p,dup_p,spikein_ratio])+"\n")
+      out.write("\t".join([samples,total,trim,mapped,filt,nodup,mapped2spike,str(scaleFactor),total_map_p,adapter_p,map_p,dup_p,spikeinPerc,spikein_ratio])+"\n")
 
 rule bam2bw:
   input:

@@ -48,3 +48,26 @@ get_EdgeR_DEout_bcv = function(counts,group,bcv=0.1,fdr=0.05,abs_FC=0,TMM_norm=T
 }
 
 save(get_EdgeR_DEout,get_EdgeR_DEout_bcv,file = "~/pipelines/RNAseq/analysis/get_edgeR_DE.RData")
+
+## for DAVID chart GO enrichment
+getDAVID = function(geneENS,readable=FALSE,DEout=NULL){
+  ibrary(reticulate)
+  source_python("/storage/zhangyanxiaoLab/niuyuxiao/pipelines/miniscripts/DAVIDChart4Rreticulate.py")
+  inputG=paste(geneENS,collapse = ",")
+  out_DAVID=david_gene_enrichment(gene_list = inputG)
+  if(readable==TRUE){
+    for (i in 1:nrow(out_DAVID)) {
+      out_DAVID$geneSYMBOLs[i] = paste(DEout[match(as.character(limma::strsplit2(out_DAVID[i,"geneIds"],", ")),DEout$gene_name),"SYMBOL"],collapse = ", ")
+    }
+  }
+}
+save(getDAVID,file = "~/pipelines/RNAseq/analysis/get_DAVID_GOchart.RData")
+
+
+
+
+
+
+
+
+
