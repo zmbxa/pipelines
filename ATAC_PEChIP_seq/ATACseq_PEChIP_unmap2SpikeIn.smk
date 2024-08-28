@@ -141,16 +141,6 @@ rule bam_filt:
     "sambamba index -t 4 {output.bam};"
     "sambamba flagstat -t 6 {output.bam} |&tee {output.dup};"
 
-rule tsse:
-  input:
-    expand("bam/{sample}.filt.nodup.srt.bam",sample=SAMPLES),
-  output:
-    "tsse/tsse.csv"
-  conda:"snapATAC2"
-  shell:
-    '''
-    python /storage/zhangyanxiaoLab/niuyuxiao/pipelines/miniscripts/tsse_snapATAC2.py -b bam/*.filt.nodup.srt.bam
-    '''
 
 #rule tsse:
 #  input:
