@@ -17,6 +17,7 @@ import pandas as pd
 
 parser = argparse.ArgumentParser(description="This script is for calculating TSS-enrichment score from bam files using snapATAC2.")
 parser.add_argument("-b","--bam",nargs="+",help="REQUIRED, bam files that you want to assess, like ./passorted_bam.bam",dest="bam_files")
+parser.add_argument("-s","--species",help="specify species for chrom_size to use, mm10 for default",default="mm10",dest="species")
 parser.add_argument("-f","--fragments-dir",help="directory contain fragments file, default=NONE, this script will generate fragments file under ./tsse/frags",default="./tsse/frags",dest="frag_dir")
 parser.add_argument("-O","--output_dir",help="output directory, ./tsse if not specified",default="./tsse",dest="output_dir")
 parser.add_argument("-o","--output_tsse",help="output tsse score file name, tsse.csv if not specified",default="tsse.csv",dest="tsseOut")
@@ -27,6 +28,12 @@ if not args.bam_files:
   print("BAM file is required!")
   parser.print_usage()
   exit(1)
+
+if not hasattr(snap.genome,args.species):
+  print("This species is not available in snapATAC2!")
+  parser.print_usage()
+  exit(1)
+
 
 if not os.path.exists(args.output_dir):
   os.makedirs(args.output_dir)
@@ -46,11 +53,11 @@ for f in args.bam_files:
   snap.pp.make_fragment_file(f,fragFile,compression='gzip',barcode_regex= r"^(.*?):\d+.*$")
   
   # import data for TSSe calculation
-  data = snap.pp.import_data(fragment_file=fragFile,chrom_sizes=snap.genome.mm10,sorted_by_barcode=False)
+  data = snap.pp.import_data(fragment_file=fragFile,chrom_sizes=getattr(snap.genome,args.species),sorted_by_barcode=False)
   
   # calc tsse, value will store to the 'data' object
   print("Calculating tsse...")
-  snap.metrics.tsse(data, snap.genome.mm10)
+  snap.metrics.tsse(data, getattr(snap.genome,args.species))
   
   result_df.loc[len(result_df)] = [name,data.obs['tsse'].values[0]]  
   
