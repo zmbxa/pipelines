@@ -54,7 +54,7 @@ fi
 
 
 if [ $? -eq 0 ]; then
- python /storage/zhangyanxiaoLab/niuyuxiao/pipelines/reminder_westlake.py "Your bulk ATAC/PE-ChIP mapping are successfully done! Congrats~" "Need a cup of Latte?"
+ python /storage/zhangyanxiaoLab/niuyuxiao/pipelines/reminder_westlake.py "Your bulk ATAC/PE-ChIP mapping are successfully done! Congrats~" "$(cat all_sample.qc.txt)"
 else
  echo "Please Check mail setting..."
  exit 1

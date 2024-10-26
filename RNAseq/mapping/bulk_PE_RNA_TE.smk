@@ -223,7 +223,7 @@ rule combine_te_counts:
         for file in {input}; do
             cut -f 2 $file | paste {output} - > tmpfile && mv tmpfile {output}
         done
-        python ~/pipelines/reminder.py "Your bulk RNA mapping are successfully done! Congrats~" "Need a cup of Latte?"
+        python ~/pipelines/reminder.py "Your bulk RNA mapping are successfully done! Congrats~" "$(cat all_sample.qc.txt)"
         '''
 
 

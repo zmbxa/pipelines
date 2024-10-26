@@ -4,7 +4,7 @@
 usage() {
   echo "Usage: bash $0 -g <genome> -c <cores_for_snakemake> -noTE"
   echo "Options:"
-  echo "  -g,   Genome name in hg38, hg38_with_dm6, mm10, mm10_GFP, mm10_with_dm6(in1), dm6 or Zokor3"
+  echo "  -g,   Genome name in hg38, hg38_with_dm6, mm10, mm10_GFP, mm10_with_dm6(in1), dm6, Zokor3 or Sta_aureus(only noTE mode)"
   echo "  -c,   Core numbers for snakemake, default is 4"
   echo "  -n, --noTE,   Do not mapping to TE reference"
   exit 1
@@ -46,7 +46,7 @@ else
 fi
 
 if [ $? -eq 0 ]; then
- python /storage/zhangyanxiaoLab/niuyuxiao/pipelines/reminder.py "Your bulk RNAseq mapping are successfully done! Congrats~" "Need a cup of Latte?"
+ python /storage/zhangyanxiaoLab/niuyuxiao/pipelines/reminder.py "Your bulk RNAseq mapping are successfully done! Congrats~" "$(cat all_sample.qc.txt)"
 else
  echo "Please Check inputs or see runing log..."
  exit 1

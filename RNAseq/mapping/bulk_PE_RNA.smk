@@ -31,7 +31,8 @@ GTF_DICT = {"hg38":"/storage/zhangyanxiaoLab/xiongxiong/Reference/Annotation/hg3
             "mm10_GFP":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/mm10_gfp_AAVCre.gtf",
             "dm6":"/storage/zhangyanxiaoLab/xiongxiong/Reference/Annotation/dm6.gencode.annotation.gtf",
             "Zokor2":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/Zokor2.gtf",
-            "Zokor3":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/EBaileyi.gtf"
+            "Zokor3":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/EBaileyi.gtf",
+            "Sta_aureus":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/Staphylococcus_aureus_gca_001018655.ASM101865v2.60.gtf"
             }
 STAR_DICT = {"hg38":"/storage/zhangyanxiaoLab/share/STAR_index/hg38",
             "hg38_with_dm6":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/hg38_with_dm6",
@@ -39,7 +40,8 @@ STAR_DICT = {"hg38":"/storage/zhangyanxiaoLab/share/STAR_index/hg38",
             "mm10":"/storage/zhangyanxiaoLab/share/STAR_index/mm10",
             "mm10_GFP":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/mm10_gfp_AAVCre",
             "Zokor2":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/Zokor2",
-            "Zokor3":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/EBaileyi"
+            "Zokor3":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/EBaileyi",
+            "Sta_aureus":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/Sta_aureus"
             }
 
 GTF = GTF_DICT[GENOME]
@@ -135,7 +137,7 @@ rule combine_counts:
         for file in {input}; do
             cut -f 8 $file |grep -v '^#' | paste {output} - > tmp && mv tmp {output}
         done
-        python ~/pipelines/reminder.py "Your bulk RNA mapping are successfully done! Congrats~" "Need a cup of Latte?"
+        python ~/pipelines/reminder.py "Your bulk RNA mapping are successfully done! Congrats~" "$(cat all_sample.qc.txt)"
         '''
 
 
