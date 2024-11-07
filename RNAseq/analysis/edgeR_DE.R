@@ -65,7 +65,7 @@ getDAVID = function(geneENS,readable=FALSE,DEout=NULL){
 save(getDAVID,file = "~/pipelines/RNAseq/analysis/get_DAVID_GOchart.RData")
 
 ### PCA Plot and batch effect
-edgeR_PCA = function(counts = counts, group = group, batch=NULL,batch_rm=FALSE,hollow=FALSE,sex=sex){
+edgeR_PCA = function(counts = counts, group = group, batch=NULL,batch_rm=FALSE,hollow=FALSE,sex=NULL,sourceTab=FALSE){
   ### check parameters
   if(is.null(batch) & (batch_rm)){
     stop("Can not remove batch if 'batch' is empty!\n")
@@ -114,14 +114,19 @@ edgeR_PCA = function(counts = counts, group = group, batch=NULL,batch_rm=FALSE,h
   use.pcs <- c(1,2)
   labs <- paste0(paste0("PC", use.pcs, " - "), paste0("Var.expl = ", round(percentVar[use.pcs], 2), "%"))
   if(hollow){
-    return(ggplot(to_plot, aes(x=PC1, y=PC2, color=tolower(sex), shape=batch))+theme_bw()+  xlab(labs[1]) + ylab(labs[2])+
-             geom_point(data=filter(to_plot,group == "WT"),size=3)+scale_color_manual(values = c("brown2","royalblue"))+
-             geom_point(data=filter(to_plot,group != "WT"),size=2,shape=ifelse(filter(to_plot,group != "WT")$batch==unique(batch)[1],2,1),stroke=1.3)+
-             ggrepel::geom_text_repel(aes(label=rownames(to_plot)),size=3)+labs(color="gender"))
+    graph = (ggplot(to_plot, aes(x=PC1, y=PC2, color=tolower(sex), shape=batch))+theme_bw()+  xlab(labs[1]) + ylab(labs[2])+
+               geom_point(data=filter(to_plot,group == "WT"),size=3)+scale_color_manual(values = c("brown2","royalblue"))+
+               geom_point(data=filter(to_plot,group != "WT"),size=2,shape=ifelse(filter(to_plot,group != "WT")$batch==unique(batch)[1],2,1),stroke=1.3)+
+               ggrepel::geom_text_repel(aes(label=rownames(to_plot)),size=3)+labs(color="gender"))
   }else{
-    return(ggplot(to_plot, aes(x=PC1, y=PC2, color=group, shape=batch)) + 
-             geom_point(size=3) +  xlab(labs[1]) + ylab(labs[2])+labs(color = NULL,shape=NULL))
+    graph = (ggplot(to_plot, aes(x=PC1, y=PC2, color=group, shape=batch)) + 
+               geom_point(size=3) +  xlab(labs[1]) + ylab(labs[2])+labs(color = NULL,shape=NULL))
   }
+  
+  if(sourceTab){
+    return(list(plot=graph,data=to_plot))
+  }else 
+    return(graph)
   
 }
 save(edgeR_PCA,file = "~/pipelines/RNAseq/analysis/PCAplot_EdgeR.RData")
