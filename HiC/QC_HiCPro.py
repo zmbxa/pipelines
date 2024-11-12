@@ -16,7 +16,7 @@ if not args.samples:
         
 
 out = open(args.outfile,'w')
-out.write("\t".join(["Sample","reported_Pairs(uniq_map)%","multi_map%","dup%","map%","cisLong/all%","cisShort/all%"])+"\n")
+out.write("\t".join(["Sample","reported_Pairs(uniq_map)%","multi_map%","dup%","map%","cisLong/all%","cisShort/all%","allValidPairs","cis/trans"])+"\n")
 for sample in args.samples:
     pairStat = open(os.path.join(args.path[0],"hic_results", "stats", sample, f"{sample}.mpairstat"))
     for line in pairStat:
@@ -34,6 +34,10 @@ for sample in args.samples:
         words = line.strip().split("\t")
         if words[0] == "valid_interaction":
             VP_all = int(words[1])
+        elif words[0] == "trans_interaction":
+            trans = int(words[1])
+        elif words[0] == "cis_interaction":
+            c_t = int(words[1])/trans
         elif words[0] == "valid_interaction_rmdup":
             dup = (int(VP_all) - int(words[1]))*100/int(VP_all)
         elif words[0] == "cis_longRange":
@@ -41,6 +45,6 @@ for sample in args.samples:
         elif words[0] == "cis_shortRange":
             cis_short = int(words[1])*100/VP_all
     vpStat.close()
-    out.write("\t".join([sample,(uniq),(multi),"%.2f"%(dup),"%.2f"%(mapped),"%.2f"%(cis_long),"%.2f"%(cis_short)])+"\n")
+    out.write("\t".join([sample,(uniq),(multi),"%.2f"%(dup),"%.2f"%(mapped),"%.2f"%(cis_long),"%.2f"%(cis_short),str(VP_all),"%.2f"%(c_t)])+"\n")
     
 out.close()

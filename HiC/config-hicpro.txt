@@ -1,0 +1,98 @@
+# Please change the variable settings below if necessary
+
+#########################################################################
+## Paths and Settings  - Do not edit !
+#########################################################################
+
+TMP_DIR = tmp
+LOGS_DIR = logs
+BOWTIE2_OUTPUT_DIR = bowtie_results
+MAPC_OUTPUT = hic_results
+RAW_DIR = rawdata
+
+#######################################################################
+## SYSTEM AND SCHEDULER - Start Editing Here !!
+#######################################################################
+N_CPU = 16
+SORT_RAM = 2000M
+LOGFILE = hicpro.log
+
+JOB_NAME = HiC
+JOB_MEM = 
+JOB_WALLTIME = 
+JOB_QUEUE = 
+JOB_MAIL = 
+
+#########################################################################
+## Data
+#########################################################################
+
+PAIR1_EXT = _R1
+PAIR2_EXT = _R2
+
+#######################################################################
+## Alignment options
+#######################################################################
+
+MIN_MAPQ = 0
+
+BOWTIE2_IDX_PATH = /storage/zhangyanxiaoLab/share/bowtie2_index/
+BOWTIE2_GLOBAL_OPTIONS = --very-sensitive --end-to-end --reorder
+BOWTIE2_LOCAL_OPTIONS =  --very-sensitive --end-to-end --reorder
+
+#######################################################################
+## Annotation files
+#######################################################################
+
+REFERENCE_GENOME = CUSTOMGENOME
+GENOME_SIZE = /storage/zhangyanxiaoLab/niuyuxiao/tools/HiC-Pro-3.1.0/annotation/chrom_CUSTOMGENOME.sizes
+
+#######################################################################
+## Allele specific analysis
+#######################################################################
+
+ALLELE_SPECIFIC_SNP = 
+
+#######################################################################
+## Capture Hi-C analysis
+#######################################################################
+
+CAPTURE_TARGET =
+REPORT_CAPTURE_REPORTER = 1
+
+#######################################################################
+## Digestion Hi-C
+#######################################################################
+
+GENOME_FRAGMENT = /storage/zhangyanxiaoLab/niuyuxiao/tools/HiC-Pro-3.1.0/annotation/CUSTOMGENOME_CUSTOMEnzyme.bed
+LIGATION_SITE = GATCGATC
+MIN_FRAG_SIZE = 10
+MAX_FRAG_SIZE = 
+MIN_INSERT_SIZE = 70
+MAX_INSERT_SIZE = 
+
+#######################################################################
+## Hi-C processing
+#######################################################################
+
+MIN_CIS_DIST = 
+GET_ALL_INTERACTION_CLASSES = 1
+GET_PROCESS_SAM = 0
+RM_SINGLETON = 1
+RM_MULTI = 1
+RM_DUP = 1
+
+#######################################################################
+## Contact Maps
+#######################################################################
+
+BIN_SIZE = 2000 5000 10000 20000 40000 150000 500000 1000000 
+MATRIX_FORMAT = upper
+
+#######################################################################
+## Normalization
+#######################################################################
+MAX_ITER = 100
+FILTER_LOW_COUNT_PERC = 0.02
+FILTER_HIGH_COUNT_PERC = 0
+EPS = 0.1

@@ -1,5 +1,5 @@
-### This snakemake file can process paired-end bulk RNAseq data (mouse mm10) ###
-### The workdir need to be changed as data containing folder (include fastq/) and all .fq file in fastq/[name]/[name]_1/2.fq.gz ###
+### This snakemake file can process paired-end bulk RNAseq data ###
+### The workdir need to be changed as data containing folder (include fastq/) and all .fq file in fastq/[name]_1/2.fq.gz ###
 ### !!! Change SAMPLES to a Tuple contain sample names (for snakemake final output)!!! ###
 ### workflow:  *** fastp ---> STAR ---> featureCounts ---> TECounts ***  output fetureCount and TECount matrix  ###
 ### Usage:  snakemake --cores 4 -s bulk_PE_RNA.smk --use-conda --conda-frontend conda
@@ -31,6 +31,7 @@ GTF_DICT = {"hg38":"/storage/zhangyanxiaoLab/xiongxiong/Reference/Annotation/hg3
             "mm10":"/storage/zhangyanxiaoLab/xiongxiong/Reference/Annotation/mm10.gencode.annotation.gtf",
             "mm10_with_dm6in1":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/mm10_dm6in1.gtf", 
             "mm10_with_dm6":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/mm10_dm6in.gtf",
+            "mm10_with_hg38":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/mm10_hg38in1.gtf",
             "mm10_GFP":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/mm10_gfp_AAVCre.gtf",
             "dm6":"/storage/zhangyanxiaoLab/xiongxiong/Reference/Annotation/dm6.gencode.annotation.gtf",
             "Zokor2":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/Zokor2.gtf",
@@ -43,6 +44,7 @@ STAR_DICT = {"hg38":"/storage/zhangyanxiaoLab/share/STAR_index/hg38",
             "mm10":"/storage/zhangyanxiaoLab/share/STAR_index/mm10",
             "mm10_with_dm6in1":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/mm10_with_dm6",
             "mm10_with_dm6":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/mm10_with_dm6",
+            "mm10_with_hg38":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/mm10_with_hg38",
             "mm10_GFP":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/mm10_gfp_AAVCre",
             "Zokor2":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/Zokor2",
             "Zokor3":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/STAR_index/EBaileyi"
@@ -53,6 +55,7 @@ TE_GTFDICT = {"hg38":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/hg38_rmsk_T
             "mm10":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/mm10_rmsk_TE.gtf",
             "mm10_with_dm6in1":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/mm10_rmsk_TE.gtf",
             "mm10_with_dm6":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/mm10_rmsk_TE.gtf",
+            "mm10_with_hg38":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/mm10_rmsk_TE.gtf",
             "mm10_GFP":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/mm10_rmsk_TE.gtf",
             "Zokor2":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/gtf/EBaileyi_v3_rmsk.TE.gtf",
             "Zokor3":"/storage/zhangyanxiaoLab/niuyuxiao/projects/non_Model_TE_Zokor/analysis/repeatMasker/fromZokor/EBaileyi.rmsk3.gtf"
