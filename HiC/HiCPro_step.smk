@@ -61,8 +61,10 @@ ALL_ICE_MATRIX = expand("HiCPro_out/hic_results/matrix/{sample}/iced/{bsize}/{sa
 ### Rule all ###
 rule all:
 	input:
-		ALL_ICE_MATRIX
-
+		ALL_ICE_MATRIX,
+		mergeStats = expand("HiCPro_out/hic_results/stats/{sample}/{sample}_allValidPairs.mergestat",sample=ALL_SAMPLES),
+		hicfiles = expand("hicFile_juicer/{sample}_srt.hic",sample=ALL_SAMPLES),
+		QC = "HiCPro_out/all_sample_qc.txt",
 
 ### List of rules to be divided into rules .smk format file ###
 
@@ -92,25 +94,15 @@ rule alignStep1:
 		unmapped="unmapped_reads/{sample}_{pos}.unmap.fastq"
 	params:
 		index=bt_index,
-		log="los/{sample}_{pos}.bowtie2.log",
+		log="logs/{sample}_{pos}.bowtie2.log",
 		sm="SM:{sample}_{pos}"
 	log:
-		alignStep1_log="logs/{sample}_{pos}.alignStep1.log"
-
+		alignStep1_log="logs/{sample}_{pos}.alignStep1.log",
 	shell:
-		"bowtie2 --very-sensitive \
-		-L 30 \
-		--score-min \
-		L,-0.6,-0.2 \
-		--end-to-end \
-		--reorder \
-		--un {output.unmapped} \
-		--rg-id BMG --rg \
-		{params.sm} -p 3 \
-		-x {params.index} \
-		-U {input.aln1} \
-		2>> {log.alignStep1_log} | \
-		samtools view -F 4 -bS - > {output.mapped}"
+		"bowtie2 --very-sensitive -L 30 --score-min L,-0.6,-0.2 \
+		--end-to-end --reorder	--un {output.unmapped} \
+		--rg-id BMG --rg {params.sm} -p 10 	-x {params.index} -U {input.aln1} \
+		2>> {log.alignStep1_log} | /storage/zhangyanxiaoLab/niuyuxiao/anaconda3/bin/samtools view -F 4 -bS - > {output.mapped}"
 
 rule cutsite_trimming:
 	input:
@@ -123,11 +115,7 @@ rule cutsite_trimming:
 		cutLog="logs/{sample}_{pos}.unmapped_trimming.log"
 	shell:
 		"/storage/zhangyanxiaoLab/niuyuxiao/tools/HiC-Pro-3.1.0/scripts/cutsite_trimming \
-		--fastq {input.tocut1} \
-		--cutsite {params.cutSite} \
-		--out {output.cut1} > \
-		{log.cutLog} \
-		2>&1"
+		--fastq {input.tocut1} --cutsite {params.cutSite} --out {output.cut1} > {log.cutLog} 	2>&1"
 
 rule alignStep2:
 	input:
@@ -140,18 +128,10 @@ rule alignStep2:
 	log:
 		alignStep2_log="logs/{sample}_{pos}.alignStep2.log"
 	shell:
-		"bowtie2 --very-sensitive \
-		-L 20 \
-		--score-min \
-		L,-0.6,-0.2 \
-		--end-to-end \
-		--reorder \
-		--rg-id BML --rg \
-		{params.sm} -p 8 \
-		-x {params.index} \
-		-U {input.aln1} \
-		2>> {log.alignStep2_log} | \
-		samtools view -bS - > {output.mapped}"
+		"bowtie2 --very-sensitive -L 20 --score-min L,-0.6,-0.2 \
+		--end-to-end --reorder --rg-id BML --rg {params.sm} -p 10 \
+		-x {params.index} -U {input.aln1} 2>> {log.alignStep2_log} | \
+		/storage/zhangyanxiaoLab/niuyuxiao/anaconda3/bin/samtools view -bS - > {output.mapped}"
 
 rule mappingCombine_merge:
 	input:
@@ -163,54 +143,49 @@ rule mappingCombine_merge:
 		thread=10,
 		parameters="-n -f"
 	shell:
-		"samtools merge \
-		-@ {params.thread} \
-		{params.parameters} \
-		{output.mergedBam} \
-		{input.bam1} \
-		{input.bam2}"
+		"/storage/zhangyanxiaoLab/niuyuxiao/anaconda3/bin/samtools merge -@ {params.thread} {params.parameters} {output.mergedBam} \
+		{input.bam1} {input.bam2}"
 
 rule mappingCombine_sort:
 	input:
-		toSort="mapped_reads/bwt2/{sample}/{sample}_{pos}.bwt2merged.bam"
+		toSort="mapped_reads/bwt2/{sample}/{sample}_{pos}.bwt2merged.bam",
 	output:
-		sorted="mapped_reads/bwt2/{sample}/{sample}_{pos}.bwt2merged.sorted.bam"
+		sorted="mapped_reads/bwt2/{sample}/{sample}_{pos}.bwt2merged.sorted.bam",
+		# temporary=temp("tmp/{sample}_{pos}.genome")
 	params:
 		thread=10,
 		memory=12,
 		parameters="-n -T",
-		temporary="tmp/{sample}_{pos}.genome"
+		temporary="mapped_reads/bwt2/{sample}/{sample}_{pos}.genome"
 	shell:
-		"samtools sort \
-		-@ {params.thread} \
-		-m {params.memory}G \
-		{params.parameters} {params.temporary} \
-		-o {output.sorted} \
-		{input.toSort}"
+		"/storage/zhangyanxiaoLab/niuyuxiao/anaconda3/bin/samtools sort -@ {params.thread} -m {params.memory}G {params.parameters} \
+		{params.temporary} -o {output.sorted} {input.toSort}"
 
 rule mergeSAM:
 	input:
 		toMerge_f="mapped_reads/bwt2/{sample}/{sample}_R1.bwt2merged.sorted.bam",
 		toMerge_r="mapped_reads/bwt2/{sample}/{sample}_R2.bwt2merged.sorted.bam"
 	output:
-		mergedBam="mapped_reads/bwt2/{sample}/{sample}.bwt2pairs.bam"
+		mergedBam="mapped_reads/bwt2/{sample}/{sample}.bwt2pairs.bam",
+		pairstat="mapped_reads/bwt2/{sample}/{sample}.bwt2pairs.pairstat"
 	params:
 		parameters="-q 10 -t -v"
 	log:
-		mergesam="{sample}.mergeSam.log"
+		mergesam="logs/{sample}.mergeSam.log"
+	conda:
+                "HiCPro"
 	shell:
 		"python /storage/zhangyanxiaoLab/niuyuxiao/tools/HiC-Pro-3.1.0/scripts/mergeSAM.py \
-		{params.parameters} \
-		-f {input.toMerge_f} \
-		-r {input.toMerge_r} \
-		-o {output.mergedBam} \
+		{params.parameters} -f {input.toMerge_f} -r {input.toMerge_r} -o {output.mergedBam} \
 		2>{log.mergesam}"
 
 rule mapped_2_hic_fragments:
 	input:
-		toMap="mapped_reads/bwt2/{sample}/{sample}.bwt2pairs.bam"
+		toMap="mapped_reads/bwt2/{sample}/{sample}.bwt2pairs.bam",
 	output:
-		mapped="HiCPro_out/hic_results/data/{sample}/{sample}.bwt2pairs.{suffix}"
+		mapped="HiCPro_out/hic_results/data/{sample}/{sample}.bwt2pairs.{suffix}",
+	conda:
+                "HiCPro"
 	params:
 		digestedGenome=FRAGFILE,
 		parameters="-v -a",
@@ -218,12 +193,18 @@ rule mapped_2_hic_fragments:
 	shell:
 		"""
 		python /storage/zhangyanxiaoLab/niuyuxiao/tools/HiC-Pro-3.1.0/scripts/mapped_2hic_fragments.py \
-		{params.parameters} \
-		-f {params.digestedGenome} \
-		-r {input.toMap} \
-		-o {params.outdir}
-		
+		{params.parameters} -f {params.digestedGenome} -r {input.toMap} -o {params.outdir}
 		"""
+
+rule mpairStat:
+  input:
+    ps="mapped_reads/bwt2/{sample}/{sample}.bwt2pairs.pairstat",
+  output:
+    mpairstat="HiCPro_out/hic_results/stats/{sample}/{sample}.mpairstat",
+  shell:
+    '''
+    		cp {input.ps} {output.mpairstat}
+    '''
 
 rule merge_valid_interactions:
 	input:
@@ -232,12 +213,28 @@ rule merge_valid_interactions:
 		Merged="HiCPro_out/hic_results/data/{sample}/{sample}.allValidPairs"
 	shell:
 		"""
-		LANG=en; sort -T tmp -S 50% -k2,2V -k3,3n -k5,5V -k6,6n \
-		-m {input.toMerge} | \
+		LANG=en; sort -T tmp -S 20G -k2,2V -k3,3n -k5,5V -k6,6n -m {input.toMerge} | \
 		awk -F"\t" 'BEGIN{{c1=0;c2=0;s1=0;s2=0}}(c1!=$2 || c2!=$5 || s1!=$3 || s2!=$6){{print;c1=$2;c2=$5;s1=$3;s2=$6}}' > \
 		{output.Merged}
-
 		"""
+		
+rule mergeStat:
+  input:
+    toMerge="HiCPro_out/hic_results/data/{sample}/{sample}.bwt2pairs.validPairs",
+    Merged="HiCPro_out/hic_results/data/{sample}/{sample}.allValidPairs",
+  output:
+    mergeStat="HiCPro_out/hic_results/stats/{sample}/{sample}_allValidPairs.mergestat"
+  shell:
+    '''
+    allcount=$(cat  {input.toMerge} | wc -l)
+    allcount_rmdup=$(cat {input.Merged} | wc -l)
+    nbdup=$(( allcount-allcount_rmdup ))
+    #mkdir -p HiCPro_out/hic_results/stats/${sample}
+    echo -e "valid_interaction\t"$allcount > {output.mergeStat}
+    echo -e "valid_interaction_rmdup\t"$allcount_rmdup >> {output.mergeStat}
+    awk 'BEGIN{{cis=0;trans=0;sr=0;lr=0}} $2 == $5{{cis=cis+1; d=$6>$3?$6-$3:$3-$6; if (d<=20000){{sr=sr+1}}else{{lr=lr+1}}}} $2!=$5{{trans=trans+1}}END{{print "trans_interaction\t"trans"\ncis_interaction\t"cis"\ncis_shortRange\t"sr"\ncis_longRange\t"lr}}' {input.Merged} >> {output.mergeStat}
+    '''
+
 
 rule build_raw_maps:
 	input:
@@ -250,6 +247,8 @@ rule build_raw_maps:
 		m_format="upper",
 		bsize_par=ALL_BIN_SIZE,
 		Built_par="HiCPro_out/hic_results/matrix/{sample}/raw/{bsize}/{sample}_{bsize}"
+	conda:
+                "HiCPro"
 	shell:
 		"""
 		cat {input.toBuild} | \
@@ -275,6 +274,8 @@ rule ice_normalisation:
 		verbose = 1
 	log:
 		ice_logs = "logs/{sample}_{bsize}_ice.log"
+	conda:
+                "HiCPro"
 	shell:
 		"""
 		/storage/zhangyanxiaoLab/niuyuxiao/anaconda3/envs/HiCPro/bin/ice --results_filename {output.Norm} \
@@ -299,16 +300,15 @@ rule avp2hic:
     juicebox=temp("hicFile_juicer/{sample}_allValidPairs.pre_juicebox_sorted"),
   shell:
     '''
-    echo "Generating Juicebox input files for ${wildcards.sample}..."
-    awk '{{$4=$4!="+"; $7=$7!="+"}} $2<=$5{{print $1, $4, $2, $3, 0, $7, $5, $6, 1, $11, $12 }}$5<$2{{ print $1, $7, $5, $6, 0, $4, $2, $3, 1, $12, $11 }}' {input.allVP} | sort -T ./ -k3,3d  -k7,7d -S 250G  > {output.juicebox}
-    
+    echo "Generating Juicebox input files for {wildcards.sample}..."
+    awk '{{$4=$4!="+"; $7=$7!="+"}} $2<=$5{{print $1, $4, $2, $3, 0, $7, $5, $6, 1, $11, $12 }}$5<$2{{ print $1, $7, $5, $6, 0, $4, $2, $3, 1, $12, $11 }}' {input.allVP} | sort -T ./ -k3,3d  -k7,7d -S 120G  > {output.juicebox}
     echo "Running Juicebox for {wildcards.sample}..."
-    java -XX:ParallelGCThreads=20 -Xmx50g -jar ~/tools/juicer/juicer/CPU/common/juicer_tools_1.22.01.jar pre {output.juicebox} {output.hicfile} {params.chromSize}
+    java -XX:ParallelGCThreads=20 -Xmx50g -jar /storage/zhangyanxiaoLab/niuyuxiao/tools/juicer/juicer/CPU/common/juicer_tools.2.20.00.jar pre {output.juicebox} {output.hicfile} {params.chromSize}
     '''
 
 rule QC:
   input:
-    mpairStat=expand("HiCPro_out/hic_results/stats/{sample}/{sample}_allValidPairs.mergestat",sample=ALL_SAMPLES),
+    pairStat=expand("HiCPro_out/hic_results/stats/{sample}/{sample}.mpairstat",sample=ALL_SAMPLES),
     avp_stat=expand("HiCPro_out/hic_results/stats/{sample}/{sample}_allValidPairs.mergestat",sample=ALL_SAMPLES),
   output:
     qc="HiCPro_out/all_sample_qc.txt"
@@ -317,7 +317,7 @@ rule QC:
     cd HiCPro_out/
     python /storage/zhangyanxiaoLab/niuyuxiao/pipelines/HiC/QC_HiCPro.py  -s {ALL_SAMPLES}
     cd ..
-    python ~/pipelines/reminder.py "Youcan check your hic qc now!" "$(cat {output.qc})"
+    python /storage/zhangyanxiaoLab/niuyuxiao/pipelines/reminder.py "Youcan check your hic qc now!" "$(cat {output.qc})"
     '''
 
 	

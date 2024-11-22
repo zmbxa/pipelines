@@ -88,6 +88,10 @@ edgeR_PCA = function(counts = counts, group = group, batch=NULL,batch_rm=FALSE,h
   if(!is.null(sex)){
     y$samples$group = group
     y$samples$sex = sex
+  }
+  if(!is.null(sex) & !is.null(batch)){
+    y$samples$group = group
+    y$samples$sex = sex
     y$samples$batch = batch
   }
   if (batch_rm) {
@@ -114,10 +118,17 @@ edgeR_PCA = function(counts = counts, group = group, batch=NULL,batch_rm=FALSE,h
   use.pcs <- c(1,2)
   labs <- paste0(paste0("PC", use.pcs, " - "), paste0("Var.expl = ", round(percentVar[use.pcs], 2), "%"))
   if(hollow){
-    graph = (ggplot(to_plot, aes(x=PC1, y=PC2, color=tolower(sex), shape=batch))+theme_bw()+  xlab(labs[1]) + ylab(labs[2])+
+    if(!is.null(batch)){
+      graph = (ggplot(to_plot, aes(x=PC1, y=PC2, color=tolower(sex), shape=batch))+theme_bw()+  xlab(labs[1]) + ylab(labs[2])+
                geom_point(data=filter(to_plot,group == "WT"),size=3)+scale_color_manual(values = c("brown2","royalblue"))+
-               geom_point(data=filter(to_plot,group != "WT"),size=2,shape=ifelse(filter(to_plot,group != "WT")$batch==unique(batch)[1],2,1),stroke=1.3)+
+               geom_point(data=filter(to_plot,group != "WT"),size=2,shape=ifelse(filter(to_plot,group != "WT")$batch==unique(filter(to_plot,group == "WT")$batch)[1],2,1),stroke=1.3)+
                ggrepel::geom_text_repel(aes(label=rownames(to_plot)),size=3)+labs(color="gender"))
+    }else{
+      graph = (ggplot(to_plot, aes(x=PC1, y=PC2, color=tolower(sex)))+theme_bw()+  xlab(labs[1]) + ylab(labs[2])+
+                 geom_point(data=filter(to_plot,group == "WT"),size=3)+geom_point(data=filter(to_plot,group != "WT"),size=2,stroke=1.3,shape=1)+
+                 scale_color_manual(values = c("brown2","royalblue"))+
+                 ggrepel::geom_text_repel(aes(label=rownames(to_plot)),size=3)+labs(color="gender"))
+    }
   }else{
     graph = (ggplot(to_plot, aes(x=PC1, y=PC2, color=group, shape=batch)) + 
                geom_point(size=3) +  xlab(labs[1]) + ylab(labs[2])+labs(color = NULL,shape=NULL))

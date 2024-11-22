@@ -75,7 +75,7 @@ rule bowtie2_align_main:
 
     bowtie2 -x $BOWTIE2_REF \
     -1 {input.R1}  -2 {input.R2} \
-    -X 2000 -p 5  | samtools view -@ 8 -bh > {output.bam}
+    -X 2000 -p 5  | /storage/zhangyanxiaoLab/niuyuxiao/anaconda3/bin/samtools view -@ 8 -bh > {output.bam}
     sambamba flagstat -t 6 {output.bam} |&tee {output.raw_qc}
      '''
      
@@ -112,7 +112,7 @@ rule bowtie2_align_spikeIn:
 
     bowtie2 -x $BOWTIE2_REF \
     -1 {input.R1}  -2 {input.R2} \
-    -X 2000 -p 5  | samtools view -@ 8 -bh > {output.bam}
+    -X 2000 -p 5  | /storage/zhangyanxiaoLab/niuyuxiao/anaconda3/bin/samtools view -@ 8 -bh > {output.bam}
     sambamba flagstat -t 6 {output.bam} |&tee {output.raw_qc}
      '''
 
@@ -137,7 +137,7 @@ rule bam_filt:
     bai = "bam/{sample}.filt.srt.bam.bai",
     dup = "qc/{sample}.dup.flagstat.qc"
   shell:
-    "samtools view -F 1804 -b {input.bam} > {output.bam};"
+    "/storage/zhangyanxiaoLab/niuyuxiao/anaconda3/bin/samtools view -F 1804 -b {input.bam} > {output.bam};"
     "sambamba index -t 4 {output.bam};"
     "sambamba flagstat -t 6 {output.bam} |&tee {output.dup};"
 

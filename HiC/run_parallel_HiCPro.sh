@@ -59,10 +59,10 @@ done
 source /storage/zhangyanxiaoLab/niuyuxiao/anaconda3/etc/profile.d/conda.sh
 conda activate snakemake
 
-snakemake --cores $N_CORE -s ~/pipelines/HiC/HiCPro_step.smk --config GENOME=${GENOME}  ENZYME=${ENZYME} --dryrun
+snakemake --cores $N_CORE -s ~/pipelines/HiC/HiCPro_step.smk --config GENOME=${GENOME}  ENZYME=${ENZYME} --use-conda --conda-frontend conda --dryrun
 if [ $? -eq 0 ]; then
   echo done
-snakemake --cores $N_CORE -s ~/pipelines/HiC/HiCPro_step.smk --config GENOME=${GENOME}  ENZYME=${ENZYME}
+snakemake --cores $N_CORE -s ~/pipelines/HiC/HiCPro_step.smk --config GENOME=${GENOME}  ENZYME=${ENZYME} --use-conda --conda-frontend conda
 else
   echo "Please Check inputs or see runing log..."
   exit 1
