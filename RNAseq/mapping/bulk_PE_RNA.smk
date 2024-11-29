@@ -108,7 +108,7 @@ rule lastqc:
     threads: 1
     run:
       out = open(output[0],'w')
-      out.write("\t".join(["Sample","Total","Mapped","Map%"])+"\n")
+      out.write("\t".join(["Sample","Total","Mapped","Map_ratio","multiMap%"])+"\n")
       for idx in range(len(input.raw)):
         samples = re.match("rna\/(.*)\/(.*)Log.final.out",input.raw[idx]).groups()[0]
         raw_file = open(input.raw[idx], 'r')
@@ -124,7 +124,8 @@ rule lastqc:
         mapped = str(int(uniq_mapped)+int(multi_mapped))
         raw_file.close()
         map_p = "%.2f"%(float(mapped)/float(total))
-        out.write("\t".join([samples,total,mapped,map_p])+"\n")
+        multi_p = "%.2f"%(float(multi_mapped)/float(total))
+        out.write("\t".join([samples,total,mapped,map_p,multi_p])+"\n")
 
 rule combine_counts:
     input:

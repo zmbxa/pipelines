@@ -78,7 +78,7 @@ rule fastp:
 	params:
 		parameters="-w 5 -t 1 -A -Q -L"
 	log:
-		fastpLog="logs/{sample}.fastpLog"
+		fastpLog="HiCPro_out/logs/{sample}/{sample}.fastpLog"
 	shell:
 		"fastp -i {input.fastq1} -I {input.fastq2} \
 		-o {output.trimmed1} -O {output.trimmed2} \
@@ -90,14 +90,14 @@ rule alignStep1:
 	input:
 		aln1="fastp/{sample}_{pos}.fastp.fastq.gz"
 	output:
-		mapped="mapped_reads/{sample}_{pos}.bam",
-		unmapped="unmapped_reads/{sample}_{pos}.unmap.fastq"
+		mapped="HiCPro_out/bowtie_results/bwt2_global/{sample}/{sample}_{pos}.bwt2glob.bam",
+		unmapped="HiCPro_out/bowtie_results/bwt2_global/{sample}/{sample}_{pos}.unmap.fastq"
 	params:
 		index=bt_index,
-		log="logs/{sample}_{pos}.bowtie2.log",
+		log="HiCPro_out/logs/{sample}/{sample}_{pos}.bowtie2.log",
 		sm="SM:{sample}_{pos}"
 	log:
-		alignStep1_log="logs/{sample}_{pos}.alignStep1.log",
+		alignStep1_log="HiCPro_out/logs/{sample}/{sample}_{pos}.alignStep1.log",
 	shell:
 		"bowtie2 --very-sensitive -L 30 --score-min L,-0.6,-0.2 \
 		--end-to-end --reorder	--un {output.unmapped} \
@@ -106,27 +106,27 @@ rule alignStep1:
 
 rule cutsite_trimming:
 	input:
-		tocut1="unmapped_reads/{sample}_{pos}.unmap.fastq"
+		tocut1="HiCPro_out/bowtie_results/bwt2_global/{sample}/{sample}_{pos}.unmap.fastq"
 	output:
-		cut1="unmapped_reads/{sample}_{pos}.unmap.trimmed.fastq"
+		cut1="HiCPro_out/bowtie_results/bwt2_local/{sample}/{sample}_{pos}.unmap.trimmed.fastq"
 	params:
 		cutSite = CUTSITE
 	log:
-		cutLog="logs/{sample}_{pos}.unmapped_trimming.log"
+		cutLog="HiCPro_out/logs/{sample}/{sample}_{pos}.unmapped_trimming.log"
 	shell:
 		"/storage/zhangyanxiaoLab/niuyuxiao/tools/HiC-Pro-3.1.0/scripts/cutsite_trimming \
 		--fastq {input.tocut1} --cutsite {params.cutSite} --out {output.cut1} > {log.cutLog} 	2>&1"
 
 rule alignStep2:
 	input:
-		aln1="unmapped_reads/{sample}_{pos}.unmap.trimmed.fastq"
+		aln1="HiCPro_out/bowtie_results/bwt2_local/{sample}/{sample}_{pos}.unmap.trimmed.fastq"
 	output:
-		mapped="mapped_reads/{sample}_{pos}.bwt2glob.unmap_bwt2loc.bam"
+		mapped="HiCPro_out/bowtie_results/bwt2_local/{sample}_{pos}.bwt2glob.unmap_bwt2loc.bam"
 	params:
 		index=bt_index,
 		sm="SM:{sample}_{pos}_genome.bwt2glob.unmap"
 	log:
-		alignStep2_log="logs/{sample}_{pos}.alignStep2.log"
+		alignStep2_log="HiCPro_out/logs/{sample}/{sample}_{pos}.alignStep2.log"
 	shell:
 		"bowtie2 --very-sensitive -L 20 --score-min L,-0.6,-0.2 \
 		--end-to-end --reorder --rg-id BML --rg {params.sm} -p 10 \
@@ -135,10 +135,10 @@ rule alignStep2:
 
 rule mappingCombine_merge:
 	input:
-		bam1="mapped_reads/{sample}_{pos}.bam",
-		bam2="mapped_reads/{sample}_{pos}.bwt2glob.unmap_bwt2loc.bam"
+		bam1="HiCPro_out/bowtie_results/bwt2_global/{sample}/{sample}_{pos}.bwt2glob.bam",
+		bam2="HiCPro_out/bowtie_results/bwt2_local/{sample}_{pos}.bwt2glob.unmap_bwt2loc.bam"
 	output:
-		mergedBam="mapped_reads/bwt2/{sample}/{sample}_{pos}.bwt2merged.bam"
+		mergedBam="HiCPro_out/bowtie_results/bwt2/{sample}/{sample}_{pos}.bwt2merged.bam"
 	params:
 		thread=10,
 		parameters="-n -f"
@@ -148,30 +148,30 @@ rule mappingCombine_merge:
 
 rule mappingCombine_sort:
 	input:
-		toSort="mapped_reads/bwt2/{sample}/{sample}_{pos}.bwt2merged.bam",
+		toSort="HiCPro_out/bowtie_results/bwt2/{sample}/{sample}_{pos}.bwt2merged.bam",
 	output:
-		sorted="mapped_reads/bwt2/{sample}/{sample}_{pos}.bwt2merged.sorted.bam",
+		sorted="HiCPro_out/bowtie_results/bwt2/{sample}/{sample}_{pos}.bwt2merged.sorted.bam",
 		# temporary=temp("tmp/{sample}_{pos}.genome")
 	params:
 		thread=10,
 		memory=12,
 		parameters="-n -T",
-		temporary="mapped_reads/bwt2/{sample}/{sample}_{pos}.genome"
+		temporary="HiCPro_out/bowtie_results/bwt2/{sample}/{sample}_{pos}.genome"
 	shell:
 		"/storage/zhangyanxiaoLab/niuyuxiao/anaconda3/bin/samtools sort -@ {params.thread} -m {params.memory}G {params.parameters} \
 		{params.temporary} -o {output.sorted} {input.toSort}"
 
 rule mergeSAM:
 	input:
-		toMerge_f="mapped_reads/bwt2/{sample}/{sample}_R1.bwt2merged.sorted.bam",
-		toMerge_r="mapped_reads/bwt2/{sample}/{sample}_R2.bwt2merged.sorted.bam"
+		toMerge_f="HiCPro_out/bowtie_results/bwt2/{sample}/{sample}_R1.bwt2merged.sorted.bam",
+		toMerge_r="HiCPro_out/bowtie_results/bwt2/{sample}/{sample}_R2.bwt2merged.sorted.bam"
 	output:
-		mergedBam="mapped_reads/bwt2/{sample}/{sample}.bwt2pairs.bam",
-		pairstat="mapped_reads/bwt2/{sample}/{sample}.bwt2pairs.pairstat"
+		mergedBam="HiCPro_out/bowtie_results/bwt2/{sample}/{sample}.bwt2pairs.bam",
+		pairstat="HiCPro_out/bowtie_results/bwt2/{sample}/{sample}.bwt2pairs.pairstat"
 	params:
 		parameters="-q 10 -t -v"
 	log:
-		mergesam="logs/{sample}.mergeSam.log"
+		mergesam="HiCPro_out/logs/{sample}/{sample}.mergeSam.log"
 	conda:
                 "HiCPro"
 	shell:
@@ -181,7 +181,7 @@ rule mergeSAM:
 
 rule mapped_2_hic_fragments:
 	input:
-		toMap="mapped_reads/bwt2/{sample}/{sample}.bwt2pairs.bam",
+		toMap="HiCPro_out/bowtie_results/bwt2/{sample}/{sample}.bwt2pairs.bam",
 	output:
 		mapped="HiCPro_out/hic_results/data/{sample}/{sample}.bwt2pairs.{suffix}",
 	conda:
@@ -198,7 +198,7 @@ rule mapped_2_hic_fragments:
 
 rule mpairStat:
   input:
-    ps="mapped_reads/bwt2/{sample}/{sample}.bwt2pairs.pairstat",
+    ps="HiCPro_out/bowtie_results/bwt2/{sample}/{sample}.bwt2pairs.pairstat",
   output:
     mpairstat="HiCPro_out/hic_results/stats/{sample}/{sample}.mpairstat",
   shell:
@@ -229,10 +229,9 @@ rule mergeStat:
     allcount=$(cat  {input.toMerge} | wc -l)
     allcount_rmdup=$(cat {input.Merged} | wc -l)
     nbdup=$(( allcount-allcount_rmdup ))
-    #mkdir -p HiCPro_out/hic_results/stats/${sample}
-    echo -e "valid_interaction\t"$allcount > {output.mergeStat}
-    echo -e "valid_interaction_rmdup\t"$allcount_rmdup >> {output.mergeStat}
-    awk 'BEGIN{{cis=0;trans=0;sr=0;lr=0}} $2 == $5{{cis=cis+1; d=$6>$3?$6-$3:$3-$6; if (d<=20000){{sr=sr+1}}else{{lr=lr+1}}}} $2!=$5{{trans=trans+1}}END{{print "trans_interaction\t"trans"\ncis_interaction\t"cis"\ncis_shortRange\t"sr"\ncis_longRange\t"lr}}' {input.Merged} >> {output.mergeStat}
+    echo -e "valid_interaction\\t"$allcount > {output.mergeStat}
+    echo -e "valid_interaction_rmdup\\t"$allcount_rmdup >> {output.mergeStat}
+    awk 'BEGIN{{cis=0;trans=0;sr=0;lr=0}} $2 == $5{{cis=cis+1; d=$6>$3?$6-$3:$3-$6; if (d<=20000){{sr=sr+1}}else{{lr=lr+1}}}} $2!=$5{{trans=trans+1}}END{{print "trans_interaction\\t"trans"\\ncis_interaction\\t"cis"\\ncis_shortRange\\t"sr"\\ncis_longRange\\t"lr}}' {input.Merged} >> {output.mergeStat}
     '''
 
 
@@ -245,7 +244,7 @@ rule build_raw_maps:
 		chrSize=CHROM_SIZE,
 		ifile="/dev/stdin",
 		m_format="upper",
-		bsize_par=ALL_BIN_SIZE,
+		bsize_par='{bsize}',
 		Built_par="HiCPro_out/hic_results/matrix/{sample}/raw/{bsize}/{sample}_{bsize}"
 	conda:
                 "HiCPro"
@@ -273,7 +272,7 @@ rule ice_normalisation:
 		bias = 1,
 		verbose = 1
 	log:
-		ice_logs = "logs/{sample}_{bsize}_ice.log"
+		ice_logs = "HiCPro_out/logs/{sample}/{sample}_{bsize}_ice.log"
 	conda:
                 "HiCPro"
 	shell:
@@ -311,11 +310,13 @@ rule QC:
     pairStat=expand("HiCPro_out/hic_results/stats/{sample}/{sample}.mpairstat",sample=ALL_SAMPLES),
     avp_stat=expand("HiCPro_out/hic_results/stats/{sample}/{sample}_allValidPairs.mergestat",sample=ALL_SAMPLES),
   output:
-    qc="HiCPro_out/all_sample_qc.txt"
+    qc="HiCPro_out/all_sample_qc.txt",
+  params:
+    samples=" ".join(ALL_SAMPLES)
   shell:
     '''
     cd HiCPro_out/
-    python /storage/zhangyanxiaoLab/niuyuxiao/pipelines/HiC/QC_HiCPro.py  -s {ALL_SAMPLES}
+    python /storage/zhangyanxiaoLab/niuyuxiao/pipelines/HiC/QC_HiCPro.py  -s {params.samples}
     cd ..
     python /storage/zhangyanxiaoLab/niuyuxiao/pipelines/reminder.py "Youcan check your hic qc now!" "$(cat {output.qc})"
     '''

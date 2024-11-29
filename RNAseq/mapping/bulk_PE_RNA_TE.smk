@@ -184,7 +184,7 @@ rule lastqc:
     threads: 1
     run:
       out = open(output[0],'w')
-      out.write("\t".join(["Sample","Total","Mapped","Map%","Total_withTE","Mapped_withTE","withTE_Map%"])+"\n")
+      out.write("\t".join(["Sample","Total","Mapped","Map%","Total_withTE","Mapped_withTE","withTE_Map%","multiMap%"])+"\n")
       for idx in range(len(input.raw)):
         samples = re.match("rna\/(.*)\/(.*)Log.final.out",input.raw[idx]).groups()[0]
         raw_file = open(input.raw[idx], 'r')
@@ -211,9 +211,10 @@ rule lastqc:
               TEmulti_mapped = words[1]
         mappedTE = str(int(TEuniq_mapped)+int(TEmulti_mapped))
         TE_file.close()
-        map_p = "%.2f"%(float(mapped)/float(total))
-        TEmap_p = "%.2f"%(float(mappedTE)/float(TEtotal))
-        out.write("\t".join([samples,total,mapped,map_p,TEtotal,mappedTE,TEmap_p])+"\n")
+        map_p = "%.2f"%(float(mapped)/float(total)*100)
+        TEmap_p = "%.2f"%(float(mappedTE)/float(TEtotal)*100)
+        multimap_p = "%.2f"%(float(TEmulti_mapped)/float(total)*100)
+        out.write("\t".join([samples,total,mapped,map_p,TEtotal,mappedTE,TEmap_p,multimap_p])+"\n")
         
 rule combine_te_counts:
     input:
