@@ -26,6 +26,7 @@ BOWTIE_DICT = {"hg38":"/storage/zhangyanxiaoLab/share/bowtie2_index/hg38",
             "mm10_GFP":"/storage/zhangyanxiaoLab/share/bowtie2_index/GFP_AAVCre_index/mm10_gfp_AAVcre",
             "dm6":"/storage/zhangyanxiaoLab/share/bowtie2_index/dm6",
             "ce11":"/storage/zhangyanxiaoLab/share/bowtie2_index/ce11",
+            "Ecoli":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/bowtie2_index/EcoliDH5a_plasmid/EcoliDH5a_plasmid",
             "lambda":"/storage/zhangyanxiaoLab/niuyuxiao/annotations/bowtie2_index/lambda/lambda"
             }
 
@@ -43,6 +44,7 @@ rule all:
   input:
     expand("bam/{sample}.filt.srt.bam",sample=SAMPLES),
     expand("bigWig/{sample}.scaled.filt.srt.bw",sample=SAMPLES),
+    expand("bigWig/{sample}.raw.filt.srt.bw",sample=SAMPLES),
     "all_sample.qc.txt",
 
 
@@ -211,13 +213,14 @@ rule bam2bw:
     bam = "bam/{sample}.filt.srt.bam",
     qc = "all_sample.qc.txt"
   output:
-    "bigWig/{sample}.scaled.filt.srt.bw"
+    scaled = "bigWig/{sample}.scaled.filt.srt.bw",
+    raw = "bigWig/{sample}.raw.filt.srt.bw"
   shell:
     '''
     sf=$(grep {wildcards.sample} {input.qc} |cut -f 8)
     source /storage/zhangyanxiaoLab/share/Pipelines/environments/python3env/bin/activate
-    bamCoverage --scaleFactor ${{sf}} -b {input.bam} -o {output} --outFileFormat bigwig -bs 50 --numberOfProcessors 6 --normalizeUsing RPKM
-    
+    bamCoverage --scaleFactor ${{sf}} -b {input.bam} -o {output.scaled} --outFileFormat bigwig -bs 50 --numberOfProcessors 6 --normalizeUsing RPKM
+    bamCoverage  -b {input.bam} -o {output.raw} --outFileFormat bigwig -bs 50 --numberOfProcessors 6 --normalizeUsing RPKM
     '''
 
 

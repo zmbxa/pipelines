@@ -49,23 +49,11 @@ get_EdgeR_DEout_bcv = function(counts,group,bcv=0.1,fdr=0.05,abs_FC=0,TMM_norm=T
 
 save(get_EdgeR_DEout,get_EdgeR_DEout_bcv,file = "~/pipelines/RNAseq/analysis/get_edgeR_DE.RData")
 
-## for DAVID chart GO enrichment
-getDAVID = function(geneENS,readable=FALSE,DEout=NULL){
-  library(reticulate)
-  source_python("/storage/zhangyanxiaoLab/niuyuxiao/pipelines/miniscripts/DAVIDChart4Rreticulate.py")
-  inputG=paste(geneENS,collapse = ",")
-  out_DAVID=david_gene_enrichment(gene_list = inputG)
-  if(readable==TRUE){
-    for (i in 1:nrow(out_DAVID)) {
-      out_DAVID$geneSYMBOLs[i] = paste(DEout[match(as.character(limma::strsplit2(out_DAVID[i,"geneIds"],", ")),DEout$gene_name),"SYMBOL"],collapse = ", ")
-    }
-  }
-  return(out_DAVID)
-}
-save(getDAVID,file = "~/pipelines/RNAseq/analysis/get_DAVID_GOchart.RData")
+
 
 ### PCA Plot and batch effect
-edgeR_PCA = function(counts = counts, group = group, batch=NULL,batch_rm=FALSE,hollow=FALSE,sex=NULL,sourceTab=FALSE){
+edgeR_PCA = function(counts = counts, group = group, batch=NULL,batch_rm=FALSE,label=T,hollow=FALSE,sex=NULL,sourceTab=FALSE){
+  load("~/pipelines/RNAseq/analysis/colorset.RData")
   ### check parameters
   if(is.null(batch) & (batch_rm)){
     stop("Can not remove batch if 'batch' is empty!\n")
@@ -120,20 +108,22 @@ edgeR_PCA = function(counts = counts, group = group, batch=NULL,batch_rm=FALSE,h
   if(hollow){
     if(!is.null(batch)){
       graph = (ggplot(to_plot, aes(x=PC1, y=PC2, color=tolower(sex), shape=batch))+theme_bw()+  xlab(labs[1]) + ylab(labs[2])+
-               geom_point(data=filter(to_plot,group == "WT"),size=3)+scale_color_manual(values = c("brown2","royalblue"))+
-               geom_point(data=filter(to_plot,group != "WT"),size=2,shape=ifelse(filter(to_plot,group != "WT")$batch==unique(filter(to_plot,group == "WT")$batch)[1],2,1),stroke=1.3)+
-               ggrepel::geom_text_repel(aes(label=rownames(to_plot)),size=3)+labs(color="gender"))
+               geom_point(data=to_plot,size=3)+ggsci::scale_color_startrek()+
+               geom_point(data=filter(to_plot,group != "WT"),size=1.2,color="white",show.legend = F)+
+               labs(color="gender"))
     }else{
       graph = (ggplot(to_plot, aes(x=PC1, y=PC2, color=tolower(sex)))+theme_bw()+  xlab(labs[1]) + ylab(labs[2])+
                  geom_point(data=filter(to_plot,group == "WT"),size=3)+geom_point(data=filter(to_plot,group != "WT"),size=2,stroke=1.3,shape=1)+
-                 scale_color_manual(values = c("brown2","royalblue"))+
-                 ggrepel::geom_text_repel(aes(label=rownames(to_plot)),size=3)+labs(color="gender"))
+                 ggsci::scale_color_startrek()+
+                 labs(color="gender"))
     }
   }else{
     graph = (ggplot(to_plot, aes(x=PC1, y=PC2, color=group, shape=batch)) + 
                geom_point(size=3) +  xlab(labs[1]) + ylab(labs[2])+labs(color = NULL,shape=NULL))
   }
-  
+  if(label){
+    graph = graph+ggrepel::geom_text_repel(aes(label=rownames(to_plot)),size=3)
+  }
   if(sourceTab){
     return(list(plot=graph,data=to_plot))
   }else 
