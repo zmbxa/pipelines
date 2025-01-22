@@ -1,16 +1,17 @@
 ## have reps
-get_EdgeR_DEout=function(counts,group,fdr=0.05,abs_FC=0,TMM_norm=T){
+get_EdgeR_DEout=function(counts,group,fdr=0.05,abs_FC=0,TMM_norm=T,filter=T,IDtrans=T){
   design = model.matrix(~1+group)
   library(edgeR)
   
   y = DGEList(counts = counts,group = group)
-  y = y[which(rowSums(edgeR::cpm(y)>=1)>=1),]
+  if (filter) {y = y[which(rowSums(edgeR::cpm(y)>=1)>=1),]}
   
   ### TMM normalize
   if(TMM_norm){y<-calcNormFactors(y)}
   ### estimate dispersion
-  y <- estimateGLMCommonDisp(y,design)
-  y <- estimateGLMTrendedDisp(y, design)
+  # y <- estimateCommonDisp(y,design)
+  y<-estimateCommonDisp(y)
+  # y <- estimateGLMTrendedDisp(y, design)
   y <- estimateGLMTagwiseDisp(y, design)
   # plotBCV(y)
   
@@ -25,15 +26,31 @@ get_EdgeR_DEout=function(counts,group,fdr=0.05,abs_FC=0,TMM_norm=T){
   out$gene_name = rownames(out)
   out$change = ifelse(out$FDR_tag <fdr & abs(out$logFC)>abs_FC,
                       ifelse(out$logFC>abs_FC,"Up","Down"),"Stable")
+  if(IDtrans){
+    if(sum(startsWith(out$gene_name,"ENSMUSG"))) {
+      print("mouse, do transfering")
+      gene_SYMBOL = read.csv("/storage/zhangyanxiaoLab/niuyuxiao/annotations/genes_SYMBOL_mm10.csv")
+      out = merge(out,gene_SYMBOL,by = "gene_name",all.x = T) %>% arrange(PValue)
+      out$SYMBOL = ifelse(is.na(out$SYMBOL),out$gene_name,out$SYMBOL)
+      out$TE = ifelse(grepl(":",out$gene_name),"TE","gene")
+    }
+    if(sum(startsWith(out$gene_name,"ENSG"))) {
+      print("human, do transfering")
+      gene_SYMBOL = read.csv("/storage/zhangyanxiaoLab/niuyuxiao/annotations/genes_SYMBOL_hg38.csv")
+      out = merge(out,gene_SYMBOL,by = "gene_name",all.x = T) %>% arrange(PValue)
+      out$SYMBOL = ifelse(is.na(out$SYMBOL),out$gene_name,out$SYMBOL)
+      out$TE = ifelse(grepl(":",out$gene_name),"TE","gene")
+    }
+  }
   return(out)
 }
 ## no replicates
-get_EdgeR_DEout_bcv = function(counts,group,bcv=0.1,fdr=0.05,abs_FC=0,TMM_norm=T){
+get_EdgeR_DEout_bcv = function(counts,group,bcv=0.1,fdr=0.05,abs_FC=0,TMM_norm=T,filter=T,IDtrans=T){
   library(edgeR)
   
   y = DGEList(counts = counts,group = group)
-  keep <- rowSums(cpm(y)>1) >= 1
-  y <- y[keep, , keep.lib.sizes=FALSE]
+  if(filter){keep <- rowSums(cpm(y)>1) >= 1
+  y <- y[keep, , keep.lib.sizes=FALSE]}
   
   ### TMM normalize
   if(TMM_norm){y<-calcNormFactors(y)}
@@ -44,6 +61,23 @@ get_EdgeR_DEout_bcv = function(counts,group,bcv=0.1,fdr=0.05,abs_FC=0,TMM_norm=T
   out$gene_name = rownames(out)
   out$change = ifelse(out$FDR_tag <fdr & abs(out$logFC)>abs_FC,
                       ifelse(out$logFC>abs_FC,"Up","Down"),"Stable")
+  
+  if(IDtrans){
+    if(sum(startsWith(out$gene_name,"ENSMUSG"))) {
+      print("mouse, do transfering")
+      gene_SYMBOL = read.csv("/storage/zhangyanxiaoLab/niuyuxiao/annotations/genes_SYMBOL_mm10.csv")
+      out = merge(out,gene_SYMBOL,by = "gene_name",all.x = T) %>% arrange(PValue)
+      out$SYMBOL = ifelse(is.na(out$SYMBOL),out$gene_name,out$SYMBOL)
+      out$TE = ifelse(grepl(":",out$gene_name),"TE","gene")
+    }
+    if(sum(startsWith(out$gene_name,"ENSG"))) {
+      print("human, do transfering")
+      gene_SYMBOL = read.csv("/storage/zhangyanxiaoLab/niuyuxiao/annotations/genes_SYMBOL_hg38.csv")
+      out = merge(out,gene_SYMBOL,by = "gene_name",all.x = T) %>% arrange(PValue)
+      out$SYMBOL = ifelse(is.na(out$SYMBOL),out$gene_name,out$SYMBOL)
+      out$TE = ifelse(grepl(":",out$gene_name),"TE","gene")
+    }
+  }
   return(arrange(out,FDR_tag))
 }
 
