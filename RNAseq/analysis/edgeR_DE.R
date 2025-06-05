@@ -1,10 +1,20 @@
 ## have reps
-get_EdgeR_DEout=function(counts,group,fdr=0.05,abs_FC=0,TMM_norm=T,filter=T,IDtrans=T){
-  design = model.matrix(~1+group)
+### add batch adjust
+get_EdgeR_DEout=function(counts,group,fdr=0.05,abs_FC=0,TMM_norm=T,filter=T,IDtrans=T,batch_rm = F,batch=NULL){
+  if(batch_rm & is.null(batch)){
+    stop("Can not remove batch if 'batch' is empty!\n")
+  }
   library(edgeR)
-  
+
+  design = model.matrix(~1+group)
   y = DGEList(counts = counts,group = group)
   if (filter) {y = y[which(rowSums(edgeR::cpm(y)>=1)>=1),]}
+  
+  if(batch_rm){
+    y$samples$batch = batch
+    design <- model.matrix(~batch+group, y$samples)
+    
+  }
   
   ### TMM normalize
   if(TMM_norm){y<-calcNormFactors(y)}
@@ -44,6 +54,8 @@ get_EdgeR_DEout=function(counts,group,fdr=0.05,abs_FC=0,TMM_norm=T,filter=T,IDtr
   }
   return(out)
 }
+
+
 ## no replicates
 get_EdgeR_DEout_bcv = function(counts,group,bcv=0.1,fdr=0.05,abs_FC=0,TMM_norm=T,filter=T,IDtrans=T){
   library(edgeR)
@@ -81,7 +93,126 @@ get_EdgeR_DEout_bcv = function(counts,group,bcv=0.1,fdr=0.05,abs_FC=0,TMM_norm=T
   return(arrange(out,FDR_tag))
 }
 
-save(get_EdgeR_DEout,get_EdgeR_DEout_bcv,file = "~/pipelines/RNAseq/analysis/get_edgeR_DE.RData")
+### modified volcano plot
+plot_volcano = function(out,FDR_c="FDR_tag",logFC_c="logFC",pointLabel=TRUE,label_c="SYMBOL",label_num = NULL,pointSize_c=NULL,color_c = "change",colors=NULL,numLabel=TRUE,title="volcano Plot",subtitle=NULL){
+  library(ggplot2);library(ggsci);library(ggpubr)
+  if(is.null(colors)){
+    if(nlevels(factor(out[,color_c]))==3)
+      colors = c(Down = "royalblue",Stable="gray",Up="firebrick")
+    else{
+      if(nlevels(factor(out[,color_c]))==5)
+        colors=c(`Down gene`="royalblue1",`Down TE`="navy",`Stable`="grey", `Up gene`="brown1",`Up TE`="firebrick4")
+    }
+  }
+  
+  # make basic plot
+  p=ggplot(out,aes(x=get(logFC_c),y=-log(get(FDR_c)),color=get(color_c)))+theme_bw()+labs(color=color_c)+
+    theme(plot.title = element_text(hjust = 0.5,face="bold"))+xlab(logFC_c)+ylab(paste0("-log(",FDR_c,")"))
+  if(is.null(pointSize_c))
+    p=p+geom_point(alpha=0.65)
+  else
+    p=p+geom_point(aes(size=get(pointSize_c)),alpha=0.65)+labs(size=pointSize_c)
+  
+  # mod color
+  if(!is.null(colors)){
+    p=p+scale_color_manual(values = colors)
+  }
+  # subtitle
+  if(!is.null(subtitle))
+    p=p+ggtitle(title,subtitle)
+  else
+    p=p+ggtitle(title)
+  # add number label
+  if(nlevels(factor(out[,color_c]))==5){
+    p=p+annotate("label", x = min(out[,logFC_c]), y = max(-log(out[,FDR_c])), label = nrow(out[which(out[,color_c]=="Down gene"),]), 
+                 vjust = 1, hjust = 0,colour="royalblue1",size=4,fontface = "bold")+
+      annotate("label", x = max(out[,logFC_c]), y = max(-log(out[,FDR_c])), label = nrow(out[which(out[,color_c]=="Up gene"),]), 
+               vjust = 1, hjust = 1,colour="brown1",size=4,fontface = "bold")+
+      annotate("label", x = 0, y = 0, label = nrow(out[which(out[,color_c]=="Stable"),]), 
+               vjust = 2, hjust = 0,colour="grey66",size=4,fontface = "bold")+
+      annotate("label", x = min(out[,logFC_c]), y = max(-log(out[,FDR_c])), label = nrow(out[which(out[,color_c]=="Down TE"),]), 
+               vjust = 2, hjust = 0,colour="navy",size=4,fontface = "bold")+
+      annotate("label", x = max(out[,logFC_c]), y = max(-log(out[,FDR_c])), label = nrow(out[which(out[,color_c]=="Up TE"),]), 
+               vjust = 2, hjust = 1,colour="firebrick4",size=4,fontface = "bold")
+  }
+  if (nlevels(factor(out[,color_c]))==3) {
+    p=p+annotate("label", x = min(out[,logFC_c]), y = max(-log(out[,FDR_c])), label = nrow(out[which(out[,color_c]=="Down"),]), 
+                 vjust = 1, hjust = 0,colour="royalblue1",size=4,fontface = "bold")+
+      annotate("label", x = 0, y = 0, label = nrow(out[which(out[,color_c]=="Stable"),]), 
+               vjust = 0, hjust = 0.5,colour="grey33",size=4,fontface = "bold")+
+      annotate("label", x = max(out[,logFC_c]), y = max(-log(out[,FDR_c])), label = nrow(out[which(out[,color_c]=="Up"),]), 
+               vjust = 1, hjust = 1,colour="brown1",size=4,fontface = "bold")
+  }
+  # add point label
+  if(pointLabel){
+    if(is.null(label_num))
+      p=p+ggrepel::geom_text_repel(data=filter(out,get(color_c) != "Stable") %>% head(label_num),size=3,mapping = aes(label=get(label_c)),show.legend = F)
+    else
+      p=p+ggrepel::geom_text_repel(data=head(out,label_num),size=3,mapping = aes(label=get(label_c)),show.legend = F)
+  }
+  return(p)
+}
+### modified MA plot
+plot_MA = function(out,logCPM_c="logCPM",logFC_c="logFC",pointLabel=TRUE,label_c="SYMBOL",label_num = NULL,pointSize_c=NULL,color_c = "change",colors=NULL,numLabel=TRUE,title="volcano Plot",subtitle=NULL){
+  library(ggplot2);library(ggsci);library(ggpubr)
+  if(is.null(colors)){
+    if(nlevels(factor(out[,color_c]))==3)
+      colors = c(Down = "royalblue",Stable="gray",Up="firebrick")
+    else{
+      if(nlevels(factor(out[,color_c]))==5)
+        colors=c(`Down gene`="royalblue1",`Down TE`="navy",`Stable`="grey", `Up gene`="brown1",`Up TE`="firebrick4")
+    }
+  }
+  
+  # make basic plot
+  p=ggplot(out,aes(y=get(logFC_c),x=get(logCPM_c),color=get(color_c)))+theme_bw()+labs(color=color_c)+
+    theme(plot.title = element_text(hjust = 0.5,face="bold"))+ylab(logFC_c)+xlab(logCPM_c)
+  if(is.null(pointSize_c))
+    p=p+geom_point(alpha=0.65)
+  else
+    p=p+geom_point(aes(size=get(pointSize_c)),alpha=0.65)+labs(size=pointSize_c)
+  
+  # mod color
+  if(!is.null(colors)){
+    p=p+scale_color_manual(values = colors)
+  }
+  # subtitle
+  if(!is.null(subtitle))
+    p=p+ggtitle(title,subtitle)
+  else
+    p=p+ggtitle(title)
+  # add number label
+  if(nlevels(factor(out[,color_c]))==5){
+    p=p+annotate("label", y = min(out[,logFC_c]), x = max(out[,logCPM_c]), label = nrow(out[which(out[,color_c]=="Down gene"),]), 
+                 hjust = 1, vjust = 0,colour="royalblue1",size=4,fontface = "bold")+
+      annotate("label", y = max(out[,logFC_c]), x = max(out[,logCPM_c]), label = nrow(out[which(out[,color_c]=="Up gene"),]), 
+               hjust = 1, vjust = 1,colour="brown1",size=4,fontface = "bold")+
+      annotate("label", x = 0, y = 0, label = nrow(out[which(out[,color_c]=="Stable"),]), 
+               hjust = 2, vjust = 0,colour="grey66",size=4,fontface = "bold")+
+      annotate("label", y = min(out[,logFC_c]), x = max(out[,logCPM_c]), label = nrow(out[which(out[,color_c]=="Down TE"),]), 
+               hjust = 2, vjust = 0,colour="navy",size=4,fontface = "bold")+
+      annotate("label", y = max(out[,logFC_c]), x = max(out[,logCPM_c]), label = nrow(out[which(out[,color_c]=="Up TE"),]), 
+               hjust = 2, vjust = 1,colour="firebrick4",size=4,fontface = "bold")
+  }
+  if (nlevels(factor(out[,color_c]))==3) {
+    p=p+annotate("label", y = min(out[,logFC_c]), x = max(out[,logCPM_c]), label = nrow(out[which(out[,color_c]=="Down"),]), 
+                 hjust = 1, vjust = 0,colour="royalblue1",size=4,fontface = "bold")+
+      annotate("label", x = 0, y = 0, label = nrow(out[which(out[,color_c]=="Stable"),]), 
+               hjust = 0, vjust = 0.5,colour="grey33",size=4,fontface = "bold")+
+      annotate("label", y = max(out[,logFC_c]), x = max(out[,logCPM_c]), label = nrow(out[which(out[,color_c]=="Up"),]), 
+               hjust = 1, vjust = 1,colour="brown1",size=4,fontface = "bold")
+  }
+  # add point label
+  if(pointLabel){
+    if(is.null(label_num))
+      p=p+ggrepel::geom_text_repel(data=filter(out,get(color_c) != "Stable") %>% head(label_num),size=3,mapping = aes(label=get(label_c)),show.legend = F)
+    else
+      p=p+ggrepel::geom_text_repel(data=head(out,label_num),size=3,mapping = aes(label=get(label_c)),show.legend = F)
+  }
+  return(p)
+}
+
+save(get_EdgeR_DEout,get_EdgeR_DEout_bcv,plot_volcano,plot_MA,file = "~/pipelines/RNAseq/analysis/get_edgeR_DE.RData")
 
 
 
